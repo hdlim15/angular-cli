@@ -23,7 +23,8 @@ import {
   EmitFlags,
   Program,
   SOURCE,
-  UNKNOWN_ERROR_CODE,
+  UNKNOWN_ERROR_CODE, \
+VERSION,
   createCompilerHost,
   createProgram,
   formatDiagnostics,
@@ -99,6 +100,7 @@ export class AngularCompilerPlugin {
   private _lazyRoutes: LazyRouteMap = {};
   private _tsConfigPath!: string;
   private _entryModule: string | null = null;
+  private _entryModules: string[] | null = null;
   private _mainPath: string | undefined;
   private _basePath!: string;
   private _transformers: ts.TransformerFactory<ts.SourceFile>[] = [];
@@ -140,15 +142,18 @@ export class AngularCompilerPlugin {
 
   get options() { return this._options; }
   get done() { return this._donePromise; }
-  get entryModule() {
-    if (!this._entryModule) {
+  get entryModules() {
+    if (!this._entryModules) {
       return null;
     }
-    const splitted = this._entryModule.split(/(#[a-zA-Z_]([\w]+))$/);
-    const path = splitted[0];
-    const className = !!splitted[1] ? splitted[1].substring(1) : 'default';
 
-    return { path, className };
+    return this._entryModules.map((entryModule) => {
+      const splitted = entryModule.split(/(#[a-zA-Z_]([\w]+))$/);
+      const path = splitted[0];
+      const className = !!splitted[1] ? splitted[1].substring(1) : 'default';
+
+      return { path, className };
+    });
   }
 
   get typeChecker(): ts.TypeChecker | null {
@@ -306,13 +311,13 @@ export class AngularCompilerPlugin {
     this._contextElementDependencyConstructor = options.contextElementDependencyConstructor
       || require('webpack/lib/dependencies/ContextElementDependency');
 
-    // Use entryModule if available in options, otherwise resolve it from mainPath after program
+    // Use entryModules if available in options, otherwise resolve it from mainPath after program
     // creation.
-    if (this._options.entryModule) {
-      this._entryModule = this._options.entryModule;
+    if (this._options.entryModules) {
+      this._entryModules = this._options.entryModules || [this._options.entryModule];
     } else if (this._compilerOptions.entryModule) {
-      this._entryModule = path.resolve(this._basePath,
-        this._compilerOptions.entryModule as string); // temporary cast for type issue
+      this._entryModules = [path.resolve(this._basePath,
+        this._compilerOptions.entryModule as string)]; // temporary cast for type issue
     }
 
     // Set platform.
@@ -440,7 +445,7 @@ export class AngularCompilerPlugin {
       this._entryModule = resolveEntryModuleFromMain(
         this._mainPath, this._compilerHost, this._getTsProgram() as ts.Program);
 
-      if (this._discoverLazyRoutes && !this.entryModule && !this._compilerOptions.enableIvy) {
+      if (this._discoverLazyRoutes && !this.entryModules && !this._compilerOptions.enableIvy) {
         this._warnings.push('Lazy routes discovery is not enabled. '
           + 'Because there is neither an entryModule nor a '
           + 'statically analyzable bootstrap code in the main file.',
@@ -471,7 +476,7 @@ export class AngularCompilerPlugin {
     let ngProgram: Program;
 
     if (this._JitMode) {
-      if (!this.entryModule) {
+      if (!this.entryModules) {
         return {};
       }
 
@@ -483,7 +488,8 @@ export class AngularCompilerPlugin {
       });
       timeEnd('AngularCompilerPlugin._listLazyRoutesFromProgram.createProgram');
 
-      entryRoute = workaroundResolve(this.entryModule.path) + '#' + this.entryModule.className;
+      const entryModule = this.entryModules[0];
+      entryRoute = workaroundResolve(entryModule.path) + '#' + entryModule.className;
     } else {
       ngProgram = this._program as Program;
     }
@@ -1031,9 +1037,12 @@ export class AngularCompilerPlugin {
     const isMainPath = (fileName: string) => fileName === (
       this._mainPath ? workaroundResolve(this._mainPath) : this._mainPath
     );
-    const getEntryModule = () => this.entryModule
-      ? { path: workaroundResolve(this.entryModule.path), className: this.entryModule.className }
-      : this.entryModule;
+    // TODO: fix fn usage
+    const getEntryModules = () => this.entryModules
+      ? this.entryModules.map((entryModule) => {
+        return { path: workaroundResolve(entryModule.path), className: entryModule.className };
+      })
+      : this.entryModules;
     const getLazyRoutes = () => this._lazyRoutes;
     const getTypeChecker = () => (this._getTsProgram() as ts.Program).getTypeChecker();
 
@@ -1080,7 +1089,7 @@ export class AngularCompilerPlugin {
         // This transform must go before replaceBootstrap because it looks for the entry module
         // import, which will be replaced.
         if (this._normalizedLocale) {
-          this._transformers.push(registerLocaleData(isAppPath, getEntryModule,
+          this._transformers.push(registerLocaleData(isAppPath, getEntryModules,
             this._normalizedLocale));
         }
 
@@ -1088,7 +1097,7 @@ export class AngularCompilerPlugin {
           // Replace bootstrap in browser non JIT Mode.
           this._transformers.push(replaceBootstrap(
             isAppPath,
-            getEntryModule,
+            getEntryModules,
             getTypeChecker,
             this._useFactories,
           ));
@@ -1102,8 +1111,8 @@ export class AngularCompilerPlugin {
 
         if (this._useFactories) {
           this._transformers.push(
-            exportNgFactory(isMainPath, getEntryModule),
-            replaceServerBootstrap(isMainPath, getEntryModule, getTypeChecker));
+            exportNgFactory(isMainPath, getEntryModules),
+            replaceServerBootstrap(isMainPath, getEntryModules, getTypeChecker));
         }
       }
     }
