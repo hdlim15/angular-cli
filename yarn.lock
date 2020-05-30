@@ -100,17 +100,17 @@
     tslib "^2.0.0"
     xhr2 "^0.2.0"
 
-"@angular/router@10.0.0-rc.0":
-  version "10.0.0-rc.0"
-  resolved "https://registry.yarnpkg.com/@angular/router/-/router-10.0.0-rc.0.tgz#b0339e6564302b68707615cde1aaaee7ee91b44b"
-  integrity sha512-sUecjGXThApr6NQlvUjavdaPHpnaDJ4foZmVWAgWHkLHWjH1GMQ18phAa1XbnYpxFP1pjsXip0oXeV3XwwKcyw==
+"@angular/router@10.0.0-rc.1":
+  version "10.0.0-rc.1"
+  resolved "https://registry.yarnpkg.com/@angular/router/-/router-10.0.0-rc.1.tgz#1681e43e5c8ea19c94d197bd4d5f20b8c2fcdd79"
+  integrity sha512-l8pJtAvnAexxDtJfJP9zf6xUK7gQvGRnsIi1ilqc8jWsza9FH7J9+wLGinToK2Bz/tkWjm8WHp5HAtZtTPq2nw==
   dependencies:
     tslib "^2.0.0"
 
-"@angular/service-worker@10.0.0-rc.0":
-  version "10.0.0-rc.0"
-  resolved "https://registry.yarnpkg.com/@angular/service-worker/-/service-worker-10.0.0-rc.0.tgz#44f62bfc8a124782e7c27565276cce7eb6bf5ce7"
-  integrity sha512-NXDtCGKlTi2Nzp51NDfnn9YVz0FlTHShsLpUaowLpswJyXMuT4w/q24HfjUCU2GwEJtJnolXT/wUhx9ezyKBRA==
+"@angular/service-worker@10.0.0-rc.1":
+  version "10.0.0-rc.1"
+  resolved "https://registry.yarnpkg.com/@angular/service-worker/-/service-worker-10.0.0-rc.1.tgz#3e28c5cd912a5d83bb54d1992c1c51027634acca"
+  integrity sha512-OsODySjgV8gjBu/6wAKaJJ188zP5MKmcIJ0SBsW5x2UV7MaiqhyJm3DakWtnFH7OOgrAUUjzb3UIbTu8OeXLrw==
   dependencies:
     tslib "^2.0.0"
 
