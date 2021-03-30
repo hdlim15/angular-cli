@@ -23,8 +23,7 @@ import {
   EmitFlags,
   Program,
   SOURCE,
-  UNKNOWN_ERROR_CODE, \
-VERSION,
+  UNKNOWN_ERROR_CODE,
   createCompilerHost,
   createProgram,
   formatDiagnostics,
